@@ -1,0 +1,491 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101010">
+  <meta name="description" content="Join TASKI and discover online research, website testing, feedback and other task opportunities.">
+
+  <title>TASKI | Turn Your Time Into Income</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #101010;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    :root {
+      --yellow: #ffc928;
+      --dark: #101010;
+      --card: #1b1b1b;
+      --muted: #aaa;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1120px;
+      margin: auto;
+    }
+
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid #292929;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 29px;
+      font-weight: 900;
+      color: var(--yellow);
+      letter-spacing: 2px;
+    }
+
+    .nav-tag {
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #5b4914;
+      padding: 6px 12px;
+      border-radius: 20px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 85px 15px 75px;
+      background: radial-gradient(ellipse at top, #33270d 0%, #101010 65%);
+    }
+
+    .eyebrow {
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 7vw, 65px);
+      line-height: 1.12;
+      max-width: 850px;
+      margin: auto;
+      font-weight: 900;
+    }
+
+    .hero h1 span {
+      color: var(--yellow);
+    }
+
+    .hero p {
+      color: #c4c4c4;
+      max-width: 650px;
+      margin: 22px auto 30px;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: var(--yellow);
+      color: #111;
+      padding: 16px 30px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 14px;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      background: #ffdb65;
+      transform: translateY(-2px);
+    }
+
+    .hero-note {
+      display: block;
+      color: #888;
+      font-size: 12px;
+      margin-top: 14px;
+    }
+
+    section {
+      padding: 65px 0;
+    }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .section-heading h2 {
+      font-size: clamp(25px, 4vw, 36px);
+      font-weight: 900;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .tasks {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .task-card {
+      background: var(--card);
+      border: 1px solid #303030;
+      border-radius: 12px;
+      padding: 23px;
+    }
+
+    .task-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .task-card h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .task-card p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 17px;
+    }
+
+    .status {
+      display: inline-block;
+      background: #382d13;
+      color: var(--yellow);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .how {
+      background: #171717;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .step {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .number {
+      background: var(--yellow);
+      color: #111;
+      height: 43px;
+      width: 43px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 15px;
+      border-radius: 50%;
+      font-weight: 900;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .membership {
+      max-width: 500px;
+      margin: auto;
+      background: #1b1b1b;
+      border: 1px solid #6c5416;
+      border-radius: 16px;
+      padding: 35px 25px;
+      text-align: center;
+    }
+
+    .membership h3 {
+      color: var(--yellow);
+      font-size: 17px;
+    }
+
+    .price {
+      font-size: 48px;
+      font-weight: 900;
+      margin: 12px 0;
+    }
+
+    .price small {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .benefits {
+      list-style: none;
+      text-align: left;
+      margin: 25px 0;
+    }
+
+    .benefits li {
+      padding: 9px 0;
+      border-bottom: 1px solid #303030;
+      color: #ddd;
+      font-size: 14px;
+    }
+
+    .benefits li::before {
+      content: "✓";
+      color: var(--yellow);
+      font-weight: 900;
+      margin-right: 10px;
+    }
+
+    .cta {
+      text-align: center;
+      background: linear-gradient(180deg, #191919, #101010);
+    }
+
+    .cta h2 {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .cta p {
+      color: var(--muted);
+      margin-bottom: 25px;
+    }
+
+    footer {
+      padding: 25px 0;
+      text-align: center;
+      border-top: 1px solid #292929;
+      color: #888;
+      font-size: 12px;
+    }
+
+    .disclaimer {
+      color: #858585;
+      font-size: 11px;
+      max-width: 720px;
+      margin: 25px auto 0;
+      text-align: center;
+    }
+
+    @media(max-width: 600px) {
+      .hero {
+        padding: 65px 10px;
+      }
+
+      section {
+        padding: 50px 0;
+      }
+
+      .cta h2 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="logo">TASKI.</div>
+      <div class="nav-tag">KENYA • 18+</div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <div class="eyebrow">WELCOME TO TASKI</div>
+
+      <h1>
+        Your Phone Could Be Your
+        <span>Next Income Tool.</span>
+      </h1>
+
+      <p>
+        Discover online research assignments, website testing,
+        feedback opportunities and simple digital tasks.
+        All you need is your phone, internet and willingness to participate.
+      </p>
+
+      <a class="btn" href="https://wa.me/2547100494094?text=Hello%20TASKI!%20I%20want%20to%20join%20TASKI%20and%20learn%20about%20the%20monthly%20membership.">
+        JOIN TASKI TODAY →
+      </a>
+
+      <span class="hero-note">
+        Simple tasks. Flexible opportunities. New possibilities.
+      </span>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-heading">
+          <h2>Explore Online Opportunities</h2>
+          <p>Discover the types of assignments available through TASKI.</p>
+        </div>
+
+        <div class="tasks">
+
+          <div class="task-card">
+            <div class="task-icon">🔎</div>
+            <h3>Online Research</h3>
+            <p>Research topics, gather information and prepare simple reports.</p>
+            <span class="status">Job Pending</span>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon">🌐</div>
+            <h3>Website Testing</h3>
+            <p>Explore websites, test features and share your experience.</p>
+            <span class="status">Job Pending</span>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon">💬</div>
+            <h3>Content Feedback</h3>
+            <p>Give genuine feedback on online content, adverts and digital experiences.</p>
+            <span class="status">Job Pending</span>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon">📊</div>
+            <h3>Product Research</h3>
+            <p>Collect product information, compare prices and organise findings.</p>
+            <span class="status">Job Pending</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="how">
+      <div class="container">
+        <div class="section-heading">
+          <h2>How TASKI Works</h2>
+          <p>Your journey starts with a simple membership.</p>
+        </div>
+
+        <div class="steps">
+
+          <div class="step">
+            <div class="number">1</div>
+            <h3>Join TASKI</h3>
+            <p>Contact our team on WhatsApp and register for membership.</p>
+          </div>
+
+          <div class="step">
+            <div class="number">2</div>
+            <h3>Get Access</h3>
+            <p>Receive member updates and access the task opportunities published on our platform.</p>
+          </div>
+
+          <div class="step">
+            <div class="number">3</div>
+            <h3>Apply for Tasks</h3>
+            <p>Review the requirements and bid or apply when opportunities open.</p>
+          </div>
+
+          <div class="step">
+            <div class="number">4</div>
+            <h3>Complete & Earn</h3>
+            <p>Complete approved assignments and receive payment according to each task's terms.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-heading">
+          <h2>Become a TASKI Member</h2>
+          <p>Get connected to online task opportunities.</p>
+        </div>
+
+        <div class="membership">
+          <h3>MONTHLY MEMBERSHIP</h3>
+
+          <div class="price">
+            KSh 350 <small>/ month</small>
+          </div>
+
+          <ul class="benefits">
+            <li>Access to listed online opportunities</li>
+            <li>WhatsApp task notifications</li>
+            <li>Member dashboard access</li>
+            <li>Task instructions and updates</li>
+            <li>Opportunity to apply or bid for tasks</li>
+          </ul>
+
+          <a class="btn" href="https://wa.me/2547100494094?text=Hello%20TASKI!%20I%20want%20to%20subscribe%20to%20the%20KSh%20350%20monthly%20membership.">
+            GET STARTED →
+          </a>
+
+          <p style="color:#888;font-size:11px;margin-top:15px;">
+            Contact our team for registration and payment guidance.
+          </p>
+        </div>
+
+        <p class="disclaimer">
+          TASKI membership provides access to task information and application
+          opportunities. Membership does not guarantee selection, task allocation
+          or earnings. Actual earnings depend on available assignments, eligibility,
+          successful completion and approval.
+        </p>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <h2>Ready to Explore What's Possible?</h2>
+        <p>Your online opportunity journey could start today.</p>
+
+        <a class="btn" href="https://wa.me/2547100494094?text=Hello%20TASKI!%20I%20am%20interested%20in%20joining.">
+          CHAT WITH TASKI →
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="logo">TASKI.</div>
+      <p>Small Tasks. Real Opportunities.</p>
+      <p style="margin-top:10px;">© 2026 TASKI. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
