@@ -21,10 +21,10 @@
 <div class="panel" id="authPanel">
 <div class="tabs"><button id="loginTab" class="active" type="button" onclick="window.setMode('login')">LOG IN</button><button id="signupTab" type="button" onclick="window.location.href=&quot;register.html&quot;">CREATE ACCOUNT</button></div>
 <h2 id="formTitle">Welcome back</h2><p class="sub" id="formSub">Enter your email and password to continue.</p>
-<form id="authForm" onsubmit="window.handleAuthSubmit(event); return false;">
+<form id="authForm" onsubmit="return false;">
 <div class="field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
 <div class="field"><label for="password">PASSWORD</label><div class="password-wrap"><input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required><button class="toggle" type="button" id="togglePassword">SHOW</button></div><button class="forgot" type="button" id="forgotPassword">Forgot password?</button></div>
-<button class="primary" id="submitBtn" type="submit">LOG IN →</button>
+<button class="primary" id="submitBtn" type="button" onclick="window.handleAuthSubmit(event)">LOG IN →</button>
 </form>
 <div class="msg" id="message" role="status"></div>
 <p class="small">New to TASKI? Create an account. Membership activation is handled by TASKI after registration.</p>
