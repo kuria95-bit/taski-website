@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101010">
+<title>TASKI | Member Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,sans-serif;background:#101010;color:#fff;line-height:1.6}a{color:inherit;text-decoration:none}:root{--gold:#ffc928;--muted:#aaa;--card:#1b1b1b}.wrap{width:90%;max-width:1050px;margin:auto}header{border-bottom:1px solid #292929;padding:17px 0}.nav{display:flex;justify-content:space-between;align-items:center}.logo{font-size:26px;font-weight:900;letter-spacing:2px;color:var(--gold)}.nav a:last-child{font-size:12px;color:var(--gold);font-weight:800}.hero{text-align:center;padding:48px 10px 30px;background:radial-gradient(ellipse at top,#33270d 0%,#101010 68%)}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--gold);font-weight:900}.hero h1{font-size:clamp(30px,6vw,46px);margin:10px 0}.hero p{color:var(--muted);font-size:13px}.panel{max-width:470px;margin:20px auto 55px;background:var(--card);border:1px solid #38322a;border-radius:15px;padding:25px}.tabs{display:flex;background:#111;border-radius:9px;padding:4px;margin-bottom:22px}.tabs button{width:50%;padding:11px;border:0;border-radius:7px;background:transparent;color:#aaa;font-weight:800;cursor:pointer}.tabs button.active{background:var(--gold);color:#111}.panel h2{font-size:22px;margin-bottom:5px}.sub{color:var(--muted);font-size:12px;margin-bottom:20px}.field{margin:14px 0}.field label{display:block;font-size:12px;color:#ddd;font-weight:700;margin-bottom:6px}.field input{width:100%;background:#101010;border:1px solid #414141;border-radius:8px;padding:13px;color:#fff;font:inherit;font-size:14px;outline:none}.field input:focus{border-color:var(--gold)}.primary{width:100%;border:0;border-radius:8px;background:var(--gold);color:#111;padding:14px;font-weight:900;font-size:13px;cursor:pointer;margin-top:8px}.msg{font-size:12px;margin-top:14px;color:#f5d978;min-height:20px}.small{font-size:11px;color:#888;margin-top:15px;text-align:center}.dashboard{display:none;max-width:850px;margin:20px auto 55px}.welcome{padding:22px;border:1px solid #514218;background:#1b180f;border-radius:13px;margin-bottom:18px}.welcome h2{font-size:22px}.welcome p{color:var(--muted);font-size:12px}.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}.tile{background:var(--card);border:1px solid #303030;border-radius:12px;padding:20px}.tile span{font-size:24px}.tile h3{font-size:16px;margin:8px 0}.tile p{font-size:12px;color:var(--muted)}.tile a{display:inline-block;margin-top:12px;color:var(--gold);font-size:12px;font-weight:800}.logout{border:1px solid #514218;background:transparent;color:var(--gold);padding:9px 14px;border-radius:7px;font-weight:800;cursor:pointer}.dashhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}footer{text-align:center;color:#777;border-top:1px solid #292929;padding:22px;font-size:11px}@media(max-width:520px){.panel{padding:20px}.nav{gap:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav"><a class="logo" href="index.html">TASKI.</a><a href="opportunities.html">VIEW OPPORTUNITIES ↗</a></div></header>
+<main>
+<div class="hero"><div class="eyebrow">TASKI MEMBER AREA</div><h1>Your opportunities, <span style="color:#ffc928">in one place.</span></h1><p>Sign in to access your TASKI member dashboard.</p></div>
+<section class="wrap">
+<div class="panel" id="authPanel">
+<div class="tabs"><button id="loginTab" class="active" type="button">LOG IN</button><button id="signupTab" type="button">CREATE ACCOUNT</button></div>
+<h2 id="formTitle">Welcome back</h2><p class="sub" id="formSub">Enter your email and password to continue.</p>
+<form id="authForm">
+<div class="field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+<div class="field"><label for="password">PASSWORD</label><input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required></div>
+<button class="primary" id="submitBtn" type="submit">LOG IN →</button>
+</form>
+<div class="msg" id="message" role="status"></div>
+<p class="small">New to TASKI? Create an account. Membership activation is handled by TASKI after registration.</p>
+</div>
+<div class="dashboard" id="dashboard">
+<div class="dashhead"><div><div class="eyebrow">MEMBER DASHBOARD</div><h2>Welcome to TASKI</h2></div><button class="logout" id="logoutBtn">LOG OUT</button></div>
+<div class="welcome"><h2 id="memberEmail">Member account</h2><p>Account created. Your membership status and application records will appear here once the member database is connected.</p></div>
+<div class="tiles">
+<div class="tile"><span>🧭</span><h3>Browse Opportunities</h3><p>Explore task categories and read the latest assignment information.</p><a href="opportunities.html">VIEW TASKS →</a></div>
+<div class="tile"><span>📨</span><h3>My Applications</h3><p>Your submitted applications will be listed here when application tracking is connected.</p><a href="opportunities.html">FIND TASKS →</a></div>
+<div class="tile"><span>👤</span><h3>My Membership</h3><p>Membership activation and renewal details are managed by the TASKI team.</p><a href="https://wa.me/2547100494094?text=Hello%20TASKI%2C%20please%20help%20me%20check%20my%20membership%20status.">CONTACT SUPPORT →</a></div>
+</div>
+</div>
+</section>
+</main>
+<footer><a class="logo" href="index.html">TASKI.</a><p>Small Tasks. Real Opportunities.</p><p>© 2026 TASKI</p></footer>
+<script>
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+let supabase = null;
+if (configured && window.supabase) supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const loginTab=document.getElementById("loginTab"),signupTab=document.getElementById("signupTab"),title=document.getElementById("formTitle"),sub=document.getElementById("formSub"),submit=document.getElementById("submitBtn"),form=document.getElementById("authForm"),message=document.getElementById("message"),authPanel=document.getElementById("authPanel"),dashboard=document.getElementById("dashboard");
+let mode="login";
+function setMode(next){mode=next;loginTab.classList.toggle("active",mode==="login");signupTab.classList.toggle("active",mode==="signup");title.textContent=mode==="login"?"Welcome back":"Create your TASKI account";sub.textContent=mode==="login"?"Enter your email and password to continue.":"Register with your email and create a secure password.";submit.textContent=mode==="login"?"LOG IN →":"CREATE ACCOUNT →";document.getElementById("password").autocomplete=mode==="login"?"current-password":"new-password";message.textContent="";}
+loginTab.addEventListener("click",()=>setMode("login"));signupTab.addEventListener("click",()=>setMode("signup"));
+function showDashboard(user){authPanel.style.display="none";dashboard.style.display="block";document.getElementById("memberEmail").textContent=user.email||"TASKI Member";}
+function showAuth(){dashboard.style.display="none";authPanel.style.display="block";}
+form.addEventListener("submit",async e=>{e.preventDefault();message.textContent="";if(!supabase){message.textContent="Account service setup is not connected yet. TASKI admin setup is required before registration or login can work.";return;}const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;if(mode==="signup"){const {data,error}=await supabase.auth.signUp({email,password});if(error){message.textContent=error.message;return;}message.textContent=data.session?"Account created. You are signed in.":"Account created. Check your email to confirm your account, then log in.";if(data.session)showDashboard(data.user);}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error){message.textContent=error.message;return;}showDashboard(data.user);}});
+document.getElementById("logoutBtn").addEventListener("click",async()=>{if(supabase)await supabase.auth.signOut();showAuth();});
+if(supabase){supabase.auth.getSession().then(({data})=>{if(data.session)showDashboard(data.session.user);});supabase.auth.onAuthStateChange((_event,session)=>{if(session)showDashboard(session.user);});}
+</script>
+</body>
+</html>
