@@ -19,7 +19,7 @@
 <div class="hero"><div class="eyebrow">TASKI MEMBER AREA</div><h1>Your opportunities, <span style="color:#ffc928">in one place.</span></h1><p>Sign in to access your TASKI member dashboard.</p></div>
 <section class="wrap">
 <div class="panel" id="authPanel">
-<div class="tabs"><button id="loginTab" class="active" type="button">LOG IN</button><button id="signupTab" type="button">CREATE ACCOUNT</button></div>
+<div class="tabs"><button id="loginTab" class="active" type="button" onclick="setMode(\'login\')">LOG IN</button><button id="signupTab" type="button" onclick="setMode(\'signup\')">CREATE ACCOUNT</button></div>
 <h2 id="formTitle">Welcome back</h2><p class="sub" id="formSub">Enter your email and password to continue.</p>
 <form id="authForm">
 <div class="field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
