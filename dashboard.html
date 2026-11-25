@@ -42,22 +42,91 @@
 </main>
 <footer><a class="logo" href="index.html">TASKI.</a><p>Small Tasks. Real Opportunities.</p><p>© 2026 TASKI</p></footer>
 <script>
-const SUPABASE_URL = "https://rggzettkkhcioxfpjekj.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_uQwUGngD9JKIRlaNMd0Tfw_7-KjUaL3";
-const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
-let supabase = null;
-if (configured && window.supabase) supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const loginTab=document.getElementById("loginTab"),signupTab=document.getElementById("signupTab"),title=document.getElementById("formTitle"),sub=document.getElementById("formSub"),submit=document.getElementById("submitBtn"),form=document.getElementById("authForm"),message=document.getElementById("message"),authPanel=document.getElementById("authPanel"),dashboard=document.getElementById("dashboard");
-let mode="login";
-window.setMode=function(next){mode=next;loginTab.classList.toggle("active",mode==="login");signupTab.classList.toggle("active",mode==="signup");title.textContent=mode==="login"?"Welcome back":"Create your TASKI account";sub.textContent=mode==="login"?"Enter your email and password to continue.":"Register with your email and create a secure password.";submit.textContent=mode==="login"?"LOG IN →":"CREATE ACCOUNT →";document.getElementById("password").autocomplete=mode==="login"?"current-password":"new-password";message.textContent="";}
-loginTab.addEventListener("click",()=>setMode("login"));
-document.getElementById("togglePassword").addEventListener("click",()=>{const p=document.getElementById("password"),b=document.getElementById("togglePassword");p.type=p.type==="password"?"text":"password";b.textContent=p.type==="password"?"SHOW":"HIDE";});
-document.getElementById("forgotPassword").addEventListener("click",async()=>{if(!supabase){message.textContent="Account service is not connected.";return;}const email=document.getElementById("email").value.trim();if(!email){message.textContent="Enter your email address first, then tap Forgot password?";document.getElementById("email").focus();return;}message.textContent="Sending password reset email...";const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://kuria95-bit.github.io/taski-website/reset-password.html"});message.textContent=error?error.message:"If an account exists for that email, a password reset link will be sent. Check your inbox.";});
-function showDashboard(user){authPanel.style.display="none";dashboard.style.display="block";document.getElementById("memberEmail").textContent=user.email||"TASKI Member";}
-function showAuth(){dashboard.style.display="none";authPanel.style.display="block";}
-window.handleAuthSubmit=async function(e){if(e)e.preventDefault();message.textContent="";if(!supabase){message.textContent="Account service is not connected. Please refresh and try again.";return false;}const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;if(!email||!password){message.textContent="Please enter your email and password.";return false;}submit.disabled=true;submit.textContent="PLEASE WAIT...";try{if(mode==="signup"){const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:"https://kuria95-bit.github.io/taski-website/dashboard.html"}});if(error)throw error;message.textContent=data.session?"Account created. You are signed in.":"Account created. Check your email to confirm your account, then log in.";if(data.session)showDashboard(data.user);}else{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;if(!data.session||!data.user)throw new Error("Login did not return an active session. Please confirm your email and try again.");showDashboard(data.user);}}catch(error){message.textContent=error&&error.message?error.message:"Something went wrong. Please try again."; }finally{submit.disabled=false;submit.textContent=mode==="login"?"LOG IN →":"CREATE ACCOUNT →";}return false;};
-document.getElementById("logoutBtn").addEventListener("click",async()=>{if(supabase)await supabase.auth.signOut();showAuth();});
-if(supabase){supabase.auth.getSession().then(({data})=>{if(data.session)showDashboard(data.session.user);});supabase.auth.onAuthStateChange((_event,session)=>{if(session)showDashboard(session.user);});}
+const TASKI_SUPABASE_URL = "https://rggzettkkhcioxfpjekj.supabase.co";
+const TASKI_SUPABASE_KEY = "sb_publishable_uQwUGngD9JKIRlaNMd0Tfw_7-KjUaL3";
+let taskiClient = null;
+const byId = id => document.getElementById(id);
+const authPanel = byId("authPanel");
+const dashboard = byId("dashboard");
+const message = byId("message");
+const submit = byId("submitBtn");
+let mode = "login";
+
+function showMessage(text) { message.textContent = text; }
+function showDashboard(user) {
+  authPanel.style.display = "none";
+  dashboard.style.display = "block";
+  byId("memberEmail").textContent = user.email || "TASKI Member";
+}
+function showAuth() {
+  dashboard.style.display = "none";
+  authPanel.style.display = "block";
+}
+window.setMode = function(next) {
+  mode = next;
+  byId("loginTab").classList.toggle("active", mode === "login");
+  byId("formTitle").textContent = mode === "login" ? "Welcome back" : "Create your TASKI account";
+  byId("formSub").textContent = mode === "login" ? "Enter your email and password to continue." : "Register with your email and create a secure password.";
+  submit.textContent = mode === "login" ? "LOG IN →" : "CREATE ACCOUNT →";
+  byId("password").autocomplete = mode === "login" ? "current-password" : "new-password";
+  showMessage("");
+};
+byId("togglePassword").addEventListener("click", function() {
+  const p = byId("password");
+  p.type = p.type === "password" ? "text" : "password";
+  this.textContent = p.type === "password" ? "SHOW" : "HIDE";
+});
+byId("forgotPassword").addEventListener("click", async function() {
+  const email = byId("email").value.trim();
+  if (!email) { showMessage("Enter your email address first."); byId("email").focus(); return; }
+  if (!taskiClient) { showMessage("Authentication service did not load. Refresh the page."); return; }
+  showMessage("Sending password reset email...");
+  const { error } = await taskiClient.auth.resetPasswordForEmail(email, { redirectTo: "https://kuria95-bit.github.io/taski-website/reset-password.html" });
+  showMessage(error ? error.message : "If the account exists, a reset email has been sent.");
+});
+window.handleAuthSubmit = async function() {
+  showMessage("Button clicked. Connecting to TASKI...");
+  if (!taskiClient) { showMessage("TASKI login service did not load. Check your internet connection and refresh."); return; }
+  const email = byId("email").value.trim();
+  const password = byId("password").value;
+  if (!email || !password) { showMessage("Enter both email and password."); return; }
+  submit.disabled = true;
+  submit.textContent = "PLEASE WAIT...";
+  try {
+    if (mode === "login") {
+      const { data, error } = await taskiClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      if (!data.user) throw new Error("Login did not return a user. Please confirm your email.");
+      showDashboard(data.user);
+    } else {
+      const { data, error } = await taskiClient.auth.signUp({ email, password, options: { emailRedirectTo: "https://kuria95-bit.github.io/taski-website/dashboard.html" } });
+      if (error) throw error;
+      showMessage(data.session ? "Account created. You are signed in." : "Account created. Check your email to confirm, then log in.");
+      if (data.session && data.user) showDashboard(data.user);
+    }
+  } catch (err) {
+    showMessage(err && err.message ? err.message : "Login failed. Please try again.");
+  } finally {
+    submit.disabled = false;
+    submit.textContent = mode === "login" ? "LOG IN →" : "CREATE ACCOUNT →";
+  }
+};
+byId("logoutBtn").addEventListener("click", async function() {
+  if (taskiClient) await taskiClient.auth.signOut();
+  showAuth();
+});
+if (!window.supabase || !window.supabase.createClient) {
+  showMessage("TASKI login library did not load. Check internet and refresh.");
+} else {
+  taskiClient = window.supabase.createClient(TASKI_SUPABASE_URL, TASKI_SUPABASE_KEY);
+  taskiClient.auth.getSession().then(({ data, error }) => {
+    if (error) showMessage(error.message);
+    else if (data.session) showDashboard(data.session.user);
+  }).catch(err => showMessage(err.message || "Could not check login session."));
+  taskiClient.auth.onAuthStateChange((event, session) => {
+    if (session) showDashboard(session.user);
+  });
+}
 </script>
 </body>
 </html>
