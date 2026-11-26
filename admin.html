@@ -63,17 +63,22 @@ async function loadMembers(){
   (m.data||[]).forEach(row=>{if(!latest.has(row.user_id))latest.set(row.user_id,row);});
   allMembers=(p.data||[]).map(profile=>({...profile,membership:latest.get(profile.id)||null}));
   $("totalCount").textContent=allMembers.length;
-  $("activeCount").textContent=allMembers.filter(x=>x.membership?.status==="active").length;
-  $("pendingCount").textContent=allMembers.filter(x=>!x.membership||x.membership.status==="pending").length;
+  $("activeCount").textContent=allMembers.filter(x=>membershipStatus(x.membership)==="active").length;
+  $("pendingCount").textContent=allMembers.filter(x=>!x.membership||membershipStatus(x.membership)==="pending").length;
   setAdminMessage(allMembers.length+" member record(s) loaded.");
   renderMembers();
+}
+function membershipStatus(m){
+  if(!m)return "no record";
+  if(m.status==="active"&&m.expires_at&&new Date(m.expires_at).getTime()<Date.now())return "expired";
+  return m.status||"no record";
 }
 function renderMembers(){
   const q=$("search").value.trim().toLowerCase();
   const rows=allMembers.filter(x=>(x.email||"").toLowerCase().includes(q)||(x.full_name||"").toLowerCase().includes(q));
   $("membersList").innerHTML=rows.map(x=>{
     const m=x.membership;
-    const status=m?.status||"no record";
+    const status=membershipStatus(m);
     const statusClass=["active","pending","expired","cancelled"].includes(status)?status:"";
     const expiry=m?.expires_at?new Date(m.expires_at).toISOString().slice(0,10):defaultExpiry();
     return '<article class="member" data-user="'+escapeHtml(x.id)+'"><h3>'+escapeHtml(x.full_name||x.email||"TASKI member")+'</h3><p class="meta">'+escapeHtml(x.email||"No email")+'</p><p class="meta">Joined: '+(x.created_at?new Date(x.created_at).toLocaleDateString():"—")+'</p><p class="meta">Membership: <span class="status '+statusClass+'">'+escapeHtml(status.toUpperCase())+'</span></p><p class="meta">Plan: '+escapeHtml(m?.plan||"Not set")+' · Expires: '+(m?.expires_at?new Date(m.expires_at).toLocaleDateString():"—")+'</p><div class="controls"><select class="plan"><option value="Monthly - KSh 350" '+(!m||m.plan==="Monthly - KSh 350"?"selected":"")+'>Monthly · KSh 350</option><option value="Monthly" '+(m?.plan==="Monthly"?"selected":"")+'>Monthly</option></select><input class="expiry" type="date" value="'+expiry+'" aria-label="Membership expiry date"><button class="btn activate" data-action="activate">'+(m?"UPDATE MEMBERSHIP":"ACTIVATE MEMBERSHIP")+'</button></div></article>';
@@ -99,7 +104,9 @@ $("membersList").addEventListener("click",async event=>{
   if(!confirm("Confirm that payment has been received before activating this membership?"))return;
   btn.disabled=true;btn.textContent="SAVING...";
   const existing=allMembers.find(x=>x.id===userId)?.membership;
-  const payload={user_id:userId,plan,status:"active",starts_at:new Date().toISOString(),expires_at:new Date(expiry+"T23:59:59").toISOString()};
+  const expiresAt=new Date(expiry+"T23:59:59");
+  const membershipState=expiresAt.getTime()<Date.now()?"expired":"active";
+  const payload={user_id:userId,plan,status:membershipState,starts_at:existing?.starts_at||new Date().toISOString(),expires_at:expiresAt.toISOString()};
   const result=existing
     ? await client.from("memberships").update(payload).eq("id",existing.id)
     : await client.from("memberships").insert(payload);
