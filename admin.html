@@ -24,6 +24,27 @@
 <div class="stats"><div class="stat"><span class="muted">Registered members</span><strong id="totalCount">0</strong></div><div class="stat"><span class="muted">Active memberships</span><strong id="activeCount">0</strong></div><div class="stat"><span class="muted">Pending memberships</span><strong id="pendingCount">0</strong></div></div>
 <div class="panel"><div class="topline"><div><h2 style="margin:0">Members</h2><p class="muted">Activate or update a member after confirming payment.</p></div><input id="search" placeholder="Search by email or name" style="max-width:260px;padding:11px;border-radius:7px;background:#101010;color:#fff;border:1px solid #555"></div><div class="msg" id="adminMsg"></div></div>
 <div class="members" id="membersList"></div>
+
+<div class="panel" id="taskManager">
+  <h2 style="margin:0 0 5px">Task Management</h2>
+  <p class="muted">Create genuine opportunities with confirmed rewards and clear conditions.</p>
+  <form id="taskForm">
+    <div class="field"><label for="taskTitle">TASK TITLE</label><input id="taskTitle" type="text" maxlength="150" required placeholder="e.g. Test a website and share feedback"></div>
+    <div class="field"><label for="taskCategory">CATEGORY</label><select id="taskCategory" required><option value="">Choose a category</option><option>Website Testing</option><option>Online Research</option><option>Product Research</option><option>Content Feedback</option><option>Data Collection</option><option>Other</option></select></div>
+    <div class="field"><label for="taskDescription">DESCRIPTION</label><textarea id="taskDescription" required rows="4" maxlength="5000" placeholder="Explain what the participant will do."></textarea></div>
+    <div class="field"><label for="taskRequirements">REQUIREMENTS / EVIDENCE</label><textarea id="taskRequirements" rows="3" maxlength="3000" placeholder="Skills, device, location, proof or submission required."></textarea></div>
+    <div class="field"><label for="taskReward">CONFIRMED REWARD (KSh)</label><input id="taskReward" type="number" min="0" step="0.01" required placeholder="Enter confirmed amount"></div>
+    <div class="field"><label for="taskSlots">AVAILABLE SLOTS</label><input id="taskSlots" type="number" min="1" step="1" value="1" required></div>
+    <div class="field"><label for="taskDeadline">DEADLINE</label><input id="taskDeadline" type="datetime-local"></div>
+    <div class="field"><label for="taskStatus">PUBLICATION STATUS</label><select id="taskStatus"><option value="pending">Job Pending (not visible to members)</option><option value="published">Published (visible to members)</option><option value="closed">Closed</option></select></div>
+    <button class="btn" id="saveTaskBtn" type="submit">SAVE TASK</button>
+    <div class="msg" id="taskMsg" role="status"></div>
+  </form>
+  <div style="border-top:1px solid #393939;margin-top:22px;padding-top:16px">
+    <div class="topline"><h3 style="margin:0">Saved tasks</h3><button class="btn secondary" id="refreshTasksBtn" type="button">REFRESH TASKS</button></div>
+    <div id="tasksList" style="margin-top:12px"><p class="muted">Loading tasks...</p></div>
+  </div>
+</div>
 </section>
 </main>
 <footer>TASKI · Small Tasks. Real Opportunities.</footer>
@@ -51,6 +72,7 @@ async function checkAdminAndLoad(){
   if(error){setAdminMessage("Could not verify admin access: "+error.message);return;}
   if(data!==true){setAdminMessage("This account is not authorized to use the admin panel.");await client.auth.signOut();$("adminPanel").classList.add("hidden");$("loginPanel").classList.remove("hidden");return;}
   await loadMembers();
+  await loadTasks();
 }
 async function loadMembers(){
   setAdminMessage("Loading members...");
@@ -84,6 +106,35 @@ function renderMembers(){
     return '<article class="member" data-user="'+escapeHtml(x.id)+'"><h3>'+escapeHtml(x.full_name||x.email||"TASKI member")+'</h3><p class="meta">'+escapeHtml(x.email||"No email")+'</p><p class="meta">Joined: '+(x.created_at?new Date(x.created_at).toLocaleDateString():"—")+'</p><p class="meta">Membership: <span class="status '+statusClass+'">'+escapeHtml(status.toUpperCase())+'</span></p><p class="meta">Plan: '+escapeHtml(m?.plan||"Not set")+' · Expires: '+(m?.expires_at?new Date(m.expires_at).toLocaleDateString():"—")+'</p><div class="controls"><select class="plan"><option value="Monthly - KSh 350" '+(!m||m.plan==="Monthly - KSh 350"?"selected":"")+'>Monthly · KSh 350</option><option value="Monthly" '+(m?.plan==="Monthly"?"selected":"")+'>Monthly</option></select><input class="expiry" type="date" value="'+expiry+'" aria-label="Membership expiry date"><button class="btn activate" data-action="activate">'+(m?"UPDATE MEMBERSHIP":"ACTIVATE MEMBERSHIP")+'</button></div></article>';
   }).join("")||'<div class="panel"><p class="muted">No matching members found.</p></div>';
 }
+
+function setTaskMessage(text){$("taskMsg").textContent=text;}
+function formatTaskDate(value){return value?new Date(value).toLocaleString():"No deadline set";}
+async function loadTasks(){
+  $("tasksList").innerHTML='<p class="muted">Loading tasks...</p>';
+  const {data,error}=await client.from("tasks").select("id,title,category,description,reward_ksh,available_slots,deadline,status,created_at").order("created_at",{ascending:false});
+  if(error){$("tasksList").innerHTML='<p class="msg">Could not load tasks: '+escapeHtml(error.message)+'</p>';return;}
+  if(!data||!data.length){$("tasksList").innerHTML='<p class="muted">No tasks have been created yet.</p>';return;}
+  $("tasksList").innerHTML=data.map(t=>'<article class="member"><h3>'+escapeHtml(t.title)+'</h3><p class="meta">'+escapeHtml(t.category)+' · <span class="status '+(t.status==="published"?"active":t.status==="pending"?"pending":"expired")+'">'+escapeHtml(t.status.toUpperCase())+'</span></p><p class="meta">Reward: KSh '+Number(t.reward_ksh).toLocaleString()+' · Slots: '+escapeHtml(t.available_slots)+'</p><p class="meta">Deadline: '+escapeHtml(formatTaskDate(t.deadline))+'</p><p class="meta">'+escapeHtml(t.description)+'</p></article>').join("");
+}
+$("taskForm").addEventListener("submit",async event=>{
+  event.preventDefault();
+  const title=$("taskTitle").value.trim(),category=$("taskCategory").value,description=$("taskDescription").value.trim();
+  const reward=Number($("taskReward").value),slots=Number($("taskSlots").value),deadlineValue=$("taskDeadline").value;
+  if(!title||!category||!description||!Number.isFinite(reward)||reward<0||!Number.isInteger(slots)||slots<1){setTaskMessage("Please complete the required fields with valid reward and slot values.");return;}
+  const deadline=deadlineValue?new Date(deadlineValue).toISOString():null;
+  if(deadline&&new Date(deadline).getTime()<Date.now()){setTaskMessage("The deadline must be in the future.");return;}
+  const payload={title,category,description,requirements:$("taskRequirements").value.trim()||null,reward_ksh:reward,available_slots:slots,deadline,status:$("taskStatus").value,created_by:currentUser?.id||null};
+  $("saveTaskBtn").disabled=true;$("saveTaskBtn").textContent="SAVING...";
+  const {error}=await client.from("tasks").insert(payload);
+  $("saveTaskBtn").disabled=false;$("saveTaskBtn").textContent="SAVE TASK";
+  if(error){setTaskMessage("Could not save task: "+error.message);return;}
+  setTaskMessage("Task saved successfully.");
+  $("taskForm").reset();
+  $("taskSlots").value="1";
+  await loadTasks();
+});
+$("refreshTasksBtn").addEventListener("click",loadTasks);
+
 $("loginBtn").addEventListener("click",async()=>{
   const email=$("email").value.trim(),password=$("password").value;
   if(!email||!password){setLoginMessage("Enter your email and password.");return;}
