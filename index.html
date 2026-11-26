@@ -552,5 +552,50 @@
     </div>
   </footer>
 
+
+  <!-- TASKI visitor analytics -->
+  <script>
+  (function () {
+    try {
+      const key = "taski_visitor_id";
+      let visitorId = localStorage.getItem(key);
+      if (!visitorId) {
+        visitorId = (window.crypto && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : "v-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+        localStorage.setItem(key, visitorId);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const referrer = (document.referrer || "").toLowerCase();
+      let source = "direct";
+      if ((params.get("utm_source") || "").toLowerCase().includes("facebook") ||
+          params.has("fbclid") || referrer.includes("facebook.com") ||
+          referrer.includes("m.facebook.com") || referrer.includes("l.facebook.com")) {
+        source = "facebook";
+      } else if (referrer) {
+        source = "other";
+      }
+      const endpoint = "https://rggzettkkhcioxfpjekj.supabase.co/rest/v1/visitor_analytics";
+      fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": "sb_publishable_uQwUGngD9JKIRlaNMd0Tfw_7-KjUaL3",
+          "Authorization": "Bearer sb_publishable_uQwUGngD9JKIRlaNMd0Tfw_7-KjUaL3",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          visitor_id: visitorId,
+          source: source,
+          page: window.location.pathname
+        }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) {
+      // Analytics must never interrupt the TASKI website.
+    }
+  })();
+  </script>
+
 </body>
 </html>
