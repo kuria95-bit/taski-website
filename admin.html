@@ -22,6 +22,15 @@
 <section id="adminPanel" class="hidden">
 <div class="topline"><div><p class="gold" style="font-size:11px;font-weight:900;letter-spacing:2px;margin-bottom:2px">TASKI CONTROL CENTRE</p><h1 style="margin:0">Membership management</h1><p class="muted" id="adminEmail"></p></div><div><button class="btn secondary" id="refreshBtn">REFRESH</button> <button class="btn secondary" id="logoutBtn">LOG OUT</button></div></div>
 <div class="stats"><div class="stat"><span class="muted">Registered members</span><strong id="totalCount">0</strong></div><div class="stat"><span class="muted">Active memberships</span><strong id="activeCount">0</strong></div><div class="stat"><span class="muted">Pending memberships</span><strong id="pendingCount">0</strong></div></div>
+<div class="panel" id="analyticsPanel">
+<div class="topline"><div><h2 style="margin:0">Visitor Analytics</h2><p class="muted">Website visits and traffic sources.</p></div><button class="btn secondary" id="refreshAnalyticsBtn" type="button">REFRESH ANALYTICS</button></div>
+<div class="stats">
+<div class="stat"><span class="muted">Total visits</span><strong id="visitTotal">—</strong></div>
+<div class="stat"><span class="muted">Facebook visits</span><strong id="facebookVisits">—</strong></div>
+<div class="stat"><span class="muted">Estimated unique visitors*</span><strong id="uniqueVisitors">—</strong></div>
+</div>
+<h3>Daily visits · last 7 days</h3><div id="dailyVisits"><p class="muted">Loading analytics...</p></div>
+<p class="muted">*Unique visitors are estimated from browser visitor IDs in the most recent 10,000 visits. Clearing browser data or using another device may count the same person again.</p><div class="msg" id="analyticsMsg" role="status"></div></div>
 <div class="panel"><div class="topline"><div><h2 style="margin:0">Members</h2><p class="muted">Activate or update a member after confirming payment.</p></div><input id="search" placeholder="Search by email or name" style="max-width:260px;padding:11px;border-radius:7px;background:#101010;color:#fff;border:1px solid #555"></div><div class="msg" id="adminMsg"></div></div>
 <div class="members" id="membersList"></div>
 
@@ -73,6 +82,7 @@ async function checkAdminAndLoad(){
   if(data!==true){setAdminMessage("This account is not authorized to use the admin panel.");await client.auth.signOut();$("adminPanel").classList.add("hidden");$("loginPanel").classList.remove("hidden");return;}
   await loadMembers();
   await loadTasks();
+  await loadAnalytics();
 }
 async function loadMembers(){
   setAdminMessage("Loading members...");
@@ -107,6 +117,23 @@ function renderMembers(){
   }).join("")||'<div class="panel"><p class="muted">No matching members found.</p></div>';
 }
 
+async function loadAnalytics(){
+ $("analyticsMsg").textContent="Loading visitor statistics...";
+ const since=new Date();since.setDate(since.getDate()-6);since.setHours(0,0,0,0);
+ const [total,facebook,recent]=await Promise.all([
+ client.from("visitor_analytics").select("id",{count:"exact",head:true}),
+ client.from("visitor_analytics").select("id",{count:"exact",head:true}).eq("source","facebook"),
+ client.from("visitor_analytics").select("visitor_id,created_at").order("created_at",{ascending:false}).limit(10000)
+ ]);
+ if(total.error||facebook.error||recent.error){$("analyticsMsg").textContent="Could not load analytics: "+(total.error?.message||facebook.error?.message||recent.error?.message);return;}
+ $("visitTotal").textContent=Number(total.count||0).toLocaleString();
+ $("facebookVisits").textContent=Number(facebook.count||0).toLocaleString();
+ const rows=recent.data||[];$("uniqueVisitors").textContent=new Set(rows.map(x=>x.visitor_id)).size.toLocaleString();
+ const days={};for(let i=0;i<7;i++){const d=new Date(since);d.setDate(since.getDate()+i);days[d.toISOString().slice(0,10)]=0;}
+ rows.forEach(row=>{const day=new Date(row.created_at).toISOString().slice(0,10);if(Object.prototype.hasOwnProperty.call(days,day))days[day]++;});
+ $("dailyVisits").innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:8px">'+Object.entries(days).map(([day,count])=>'<div class="stat"><span class="muted">'+new Date(day+"T00:00:00").toLocaleDateString(undefined,{weekday:"short",day:"numeric"})+'</span><strong>'+count+'</strong></div>').join("")+'</div>';
+ $("analyticsMsg").textContent="Analytics updated.";
+}
 function setTaskMessage(text){$("taskMsg").textContent=text;}
 function formatTaskDate(value){return value?new Date(value).toLocaleString():"No deadline set";}
 async function loadTasks(){
@@ -134,6 +161,7 @@ $("taskForm").addEventListener("submit",async event=>{
   await loadTasks();
 });
 $("refreshTasksBtn").addEventListener("click",loadTasks);
+$("refreshAnalyticsBtn").addEventListener("click",loadAnalytics);
 
 $("loginBtn").addEventListener("click",async()=>{
   const email=$("email").value.trim(),password=$("password").value;
