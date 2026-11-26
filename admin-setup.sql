@@ -50,6 +50,12 @@ create policy "TASKI admins can update memberships"
   using (public.is_taski_admin())
   with check (public.is_taski_admin());
 
+drop policy if exists "TASKI admins can create memberships" on public.memberships;
+create policy "TASKI admins can create memberships"
+  on public.memberships for insert
+  to authenticated
+  with check (public.is_taski_admin());
+
 -- Add the existing administrator account. This inserts nothing if the email
 -- is not yet present in Supabase Auth; confirm the account exists first.
 insert into public.taski_admins (user_id)
