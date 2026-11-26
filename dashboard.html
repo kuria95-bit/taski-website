@@ -31,11 +31,11 @@
 </div>
 <div class="dashboard" id="dashboard">
 <div class="dashhead"><div><div class="eyebrow">MEMBER DASHBOARD</div><h2>Welcome to TASKI</h2></div><button class="logout" id="logoutBtn">LOG OUT</button></div>
-<div class="welcome"><h2 id="memberEmail">Member account</h2><p>Account created. Your membership status and application records will appear here once the member database is connected.</p></div>
+<div class="welcome"><h2 id="memberEmail">Member account</h2><p id="membershipSummary">Loading your member information...</p></div>
 <div class="tiles">
 <div class="tile"><span>🧭</span><h3>Browse Opportunities</h3><p>Explore task categories and read the latest assignment information.</p><a href="opportunities.html">VIEW TASKS →</a></div>
 <div class="tile"><span>📨</span><h3>My Applications</h3><p>Your submitted applications will be listed here when application tracking is connected.</p><a href="opportunities.html">FIND TASKS →</a></div>
-<div class="tile"><span>👤</span><h3>My Membership</h3><p>Membership activation and renewal details are managed by the TASKI team.</p><a href="https://wa.me/2547100494094?text=Hello%20TASKI%2C%20please%20help%20me%20check%20my%20membership%20status.">CONTACT SUPPORT →</a></div>
+<div class="tile"><span>👤</span><h3>My Membership</h3><p id="membershipTileStatus">Checking membership status...</p><a href="https://wa.me/2547100494094?text=Hello%20TASKI%2C%20please%20help%20me%20check%20my%20membership%20status.">CONTACT SUPPORT →</a></div>
 </div>
 </div>
 </section>
@@ -57,6 +57,37 @@ function showDashboard(user) {
   authPanel.style.display = "none";
   dashboard.style.display = "block";
   byId("memberEmail").textContent = user.email || "TASKI Member";
+  loadMemberData(user);
+}
+async function loadMemberData(user) {
+  byId("membershipSummary").textContent = "Loading your member information...";
+  byId("membershipTileStatus").textContent = "Checking membership status...";
+  if (!taskiClient || !user || !user.id) return;
+  try {
+    const [profileResult, membershipResult] = await Promise.all([
+      taskiClient.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+      taskiClient.from("memberships").select("plan,status,starts_at,expires_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle()
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (membershipResult.error) throw membershipResult.error;
+    if (profileResult.data && profileResult.data.full_name) {
+      byId("memberEmail").textContent = profileResult.data.full_name;
+    }
+    const membership = membershipResult.data;
+    if (!membership) {
+      byId("membershipSummary").textContent = "Your account is ready. No membership record has been added yet.";
+      byId("membershipTileStatus").textContent = "No membership record yet. Contact TASKI support after payment.";
+      return;
+    }
+    const status = String(membership.status || "pending").toUpperCase();
+    const plan = membership.plan || "Membership";
+    byId("membershipSummary").textContent = "Membership: " + plan + " · Status: " + status;
+    byId("membershipTileStatus").textContent = plan + " · " + status;
+  } catch (err) {
+    byId("membershipSummary").textContent = "Your account is ready, but member details could not be loaded.";
+    byId("membershipTileStatus").textContent = "Unable to load status. Please contact TASKI support.";
+    console.error("TASKI member data error:", err);
+  }
 }
 function showAuth() {
   dashboard.style.display = "none";
