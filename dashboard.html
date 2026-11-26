@@ -79,10 +79,14 @@ async function loadMemberData(user) {
       byId("membershipTileStatus").textContent = "No membership record yet. Contact TASKI support after payment.";
       return;
     }
-    const status = String(membership.status || "pending").toUpperCase();
+    const expiryTime = membership.expires_at ? new Date(membership.expires_at).getTime() : null;
+    const rawStatus = String(membership.status || "pending").toLowerCase();
+    const effectiveStatus = rawStatus === "active" && expiryTime !== null && expiryTime < Date.now() ? "expired" : rawStatus;
+    const status = effectiveStatus.toUpperCase();
     const plan = membership.plan || "Membership";
-    byId("membershipSummary").textContent = "Membership: " + plan + " · Status: " + status;
-    byId("membershipTileStatus").textContent = plan + " · " + status;
+    const expiryText = membership.expires_at ? " · Expires: " + new Date(membership.expires_at).toLocaleDateString() : "";
+    byId("membershipSummary").textContent = "Membership: " + plan + " · Status: " + status + expiryText;
+    byId("membershipTileStatus").textContent = plan + " · " + status + expiryText;
   } catch (err) {
     byId("membershipSummary").textContent = "Your account is ready, but member details could not be loaded.";
     byId("membershipTileStatus").textContent = "Unable to load status. Please contact TASKI support.";
