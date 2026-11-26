@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101010">
+<title>TASKI | Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101010;color:#fff;font-family:Arial,sans-serif;line-height:1.5}header{padding:18px 5%;border-bottom:1px solid #303030;display:flex;justify-content:space-between;align-items:center}.logo{color:#ffc928;font-size:25px;font-weight:900;letter-spacing:2px}.wrap{width:92%;max-width:1100px;margin:28px auto}.muted{color:#aaa;font-size:13px}.gold{color:#ffc928}.panel,.member{background:#1b1b1b;border:1px solid #353535;border-radius:12px;padding:18px;margin:14px 0}.login{max-width:430px;margin:50px auto}.field{margin:12px 0}.field label{display:block;font-size:12px;color:#ccc;margin-bottom:6px}.field input{width:100%;padding:12px;border:1px solid #555;border-radius:7px;background:#101010;color:#fff;font-size:14px}.btn{border:0;border-radius:7px;background:#ffc928;color:#111;padding:11px 15px;font-weight:800;cursor:pointer}.btn.secondary{background:#333;color:#fff;border:1px solid #555}.btn:disabled{opacity:.55}.msg{color:#f5d978;font-size:13px;min-height:22px;margin-top:10px}.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}.stat{background:#1b1b1b;border:1px solid #393939;border-radius:10px;padding:16px}.stat strong{display:block;font-size:25px;color:#ffc928}.members{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.member h3{font-size:16px;margin:0 0 4px;overflow-wrap:anywhere}.member .meta{font-size:12px;color:#aaa;margin:4px 0}.member .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.member select,.member input{width:100%;padding:10px;border-radius:7px;background:#101010;color:#fff;border:1px solid #555}.member .activate{grid-column:1/-1}.status{display:inline-block;padding:3px 8px;border-radius:20px;background:#333;font-size:11px;font-weight:bold}.status.active{color:#9be7ad;background:#173321}.status.pending{color:#f5d978;background:#3a3013}.status.expired,.status.cancelled{color:#ffaaa5;background:#3a1b1b}.hidden{display:none!important}footer{text-align:center;color:#777;padding:25px;font-size:11px}@media(max-width:480px){header{padding:14px 4%}.wrap{width:94%}.member .controls{grid-template-columns:1fr}.member .activate{grid-column:auto}}
+</style>
+</head>
+<body>
+<header><a class="logo" href="index.html" style="text-decoration:none">TASKI.</a><span class="gold" style="font-size:12px;font-weight:800">ADMIN PANEL</span></header>
+<main class="wrap">
+<section id="loginPanel" class="panel login">
+<h2>Administrator sign in</h2><p class="muted">Sign in using your TASKI administrator account.</p>
+<div class="field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" autocomplete="username" value="kuriap269@gmail.com"></div>
+<div class="field"><label for="password">PASSWORD</label><input id="password" type="password" autocomplete="current-password" placeholder="Your password"></div>
+<button class="btn" id="loginBtn">LOG IN</button><div class="msg" id="loginMsg"></div>
+</section>
+<section id="adminPanel" class="hidden">
+<div class="topline"><div><p class="gold" style="font-size:11px;font-weight:900;letter-spacing:2px;margin-bottom:2px">TASKI CONTROL CENTRE</p><h1 style="margin:0">Membership management</h1><p class="muted" id="adminEmail"></p></div><div><button class="btn secondary" id="refreshBtn">REFRESH</button> <button class="btn secondary" id="logoutBtn">LOG OUT</button></div></div>
+<div class="stats"><div class="stat"><span class="muted">Registered members</span><strong id="totalCount">0</strong></div><div class="stat"><span class="muted">Active memberships</span><strong id="activeCount">0</strong></div><div class="stat"><span class="muted">Pending memberships</span><strong id="pendingCount">0</strong></div></div>
+<div class="panel"><div class="topline"><div><h2 style="margin:0">Members</h2><p class="muted">Activate or update a member after confirming payment.</p></div><input id="search" placeholder="Search by email or name" style="max-width:260px;padding:11px;border-radius:7px;background:#101010;color:#fff;border:1px solid #555"></div><div class="msg" id="adminMsg"></div></div>
+<div class="members" id="membersList"></div>
+</section>
+</main>
+<footer>TASKI · Small Tasks. Real Opportunities.</footer>
+<script>
+const SUPABASE_URL = "https://rggzettkkhcioxfpjekj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uQwUGngD9JKIRlaNMd0Tfw_7-KjUaL3";
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let allMembers = [];
+let currentUser = null;
+function escapeHtml(value){return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));}
+function setLoginMessage(text){$("loginMsg").textContent=text;}
+function setAdminMessage(text){$("adminMsg").textContent=text;}
+function defaultExpiry(){const d=new Date();d.setDate(d.getDate()+30);return d.toISOString().slice(0,10);}
+async function enterAdmin(user){
+  currentUser=user;
+  $("loginPanel").classList.add("hidden");
+  $("adminPanel").classList.remove("hidden");
+  $("adminEmail").textContent="Signed in as "+(user.email||"administrator");
+  await checkAdminAndLoad();
+}
+async function checkAdminAndLoad(){
+  setAdminMessage("Verifying administrator access...");
+  const {data,error}=await client.rpc("is_taski_admin");
+  if(error){setAdminMessage("Could not verify admin access: "+error.message);return;}
+  if(data!==true){setAdminMessage("This account is not authorized to use the admin panel.");await client.auth.signOut();$("adminPanel").classList.add("hidden");$("loginPanel").classList.remove("hidden");return;}
+  await loadMembers();
+}
+async function loadMembers(){
+  setAdminMessage("Loading members...");
+  const [p,m]=await Promise.all([
+    client.from("profiles").select("id,email,full_name,created_at").order("created_at",{ascending:false}),
+    client.from("memberships").select("id,user_id,plan,status,starts_at,expires_at,created_at").order("created_at",{ascending:false})
+  ]);
+  if(p.error||m.error){setAdminMessage("Could not load records: "+(p.error?.message||m.error?.message));return;}
+  const latest=new Map();
+  (m.data||[]).forEach(row=>{if(!latest.has(row.user_id))latest.set(row.user_id,row);});
+  allMembers=(p.data||[]).map(profile=>({...profile,membership:latest.get(profile.id)||null}));
+  $("totalCount").textContent=allMembers.length;
+  $("activeCount").textContent=allMembers.filter(x=>x.membership?.status==="active").length;
+  $("pendingCount").textContent=allMembers.filter(x=>!x.membership||x.membership.status==="pending").length;
+  setAdminMessage(allMembers.length+" member record(s) loaded.");
+  renderMembers();
+}
+function renderMembers(){
+  const q=$("search").value.trim().toLowerCase();
+  const rows=allMembers.filter(x=>(x.email||"").toLowerCase().includes(q)||(x.full_name||"").toLowerCase().includes(q));
+  $("membersList").innerHTML=rows.map(x=>{
+    const m=x.membership;
+    const status=m?.status||"no record";
+    const statusClass=["active","pending","expired","cancelled"].includes(status)?status:"";
+    const expiry=m?.expires_at?new Date(m.expires_at).toISOString().slice(0,10):defaultExpiry();
+    return '<article class="member" data-user="'+escapeHtml(x.id)+'"><h3>'+escapeHtml(x.full_name||x.email||"TASKI member")+'</h3><p class="meta">'+escapeHtml(x.email||"No email")+'</p><p class="meta">Joined: '+(x.created_at?new Date(x.created_at).toLocaleDateString():"—")+'</p><p class="meta">Membership: <span class="status '+statusClass+'">'+escapeHtml(status.toUpperCase())+'</span></p><p class="meta">Plan: '+escapeHtml(m?.plan||"Not set")+' · Expires: '+(m?.expires_at?new Date(m.expires_at).toLocaleDateString():"—")+'</p><div class="controls"><select class="plan"><option value="Monthly - KSh 350" '+(!m||m.plan==="Monthly - KSh 350"?"selected":"")+'>Monthly · KSh 350</option><option value="Monthly" '+(m?.plan==="Monthly"?"selected":"")+'>Monthly</option></select><input class="expiry" type="date" value="'+expiry+'" aria-label="Membership expiry date"><button class="btn activate" data-action="activate">'+(m?"UPDATE MEMBERSHIP":"ACTIVATE MEMBERSHIP")+'</button></div></article>';
+  }).join("")||'<div class="panel"><p class="muted">No matching members found.</p></div>';
+}
+$("loginBtn").addEventListener("click",async()=>{
+  const email=$("email").value.trim(),password=$("password").value;
+  if(!email||!password){setLoginMessage("Enter your email and password.");return;}
+  $("loginBtn").disabled=true;setLoginMessage("Signing in...");
+  const {data,error}=await client.auth.signInWithPassword({email,password});
+  $("loginBtn").disabled=false;
+  if(error){setLoginMessage(error.message);return;}
+  await enterAdmin(data.user);
+});
+$("refreshBtn").addEventListener("click",loadMembers);
+$("logoutBtn").addEventListener("click",async()=>{await client.auth.signOut();currentUser=null;$("adminPanel").classList.add("hidden");$("loginPanel").classList.remove("hidden");$("password").value="";});
+$("search").addEventListener("input",renderMembers);
+$("membersList").addEventListener("click",async event=>{
+  const btn=event.target.closest("button[data-action='activate']");
+  if(!btn)return;
+  const card=btn.closest(".member"),userId=card.dataset.user,expiry=card.querySelector(".expiry").value,plan=card.querySelector(".plan").value;
+  if(!expiry){setAdminMessage("Choose an expiry date first.");return;}
+  if(!confirm("Confirm that payment has been received before activating this membership?"))return;
+  btn.disabled=true;btn.textContent="SAVING...";
+  const existing=allMembers.find(x=>x.id===userId)?.membership;
+  const payload={user_id:userId,plan,status:"active",starts_at:new Date().toISOString(),expires_at:new Date(expiry+"T23:59:59").toISOString()};
+  const result=existing
+    ? await client.from("memberships").update(payload).eq("id",existing.id)
+    : await client.from("memberships").insert(payload);
+  if(result.error){setAdminMessage("Could not save membership: "+result.error.message);btn.disabled=false;btn.textContent=existing?"UPDATE MEMBERSHIP":"ACTIVATE MEMBERSHIP";return;}
+  setAdminMessage("Membership saved for "+(allMembers.find(x=>x.id===userId)?.email||"member")+".");
+  await loadMembers();
+});
+client.auth.getSession().then(({data,error})=>{
+  if(error){setLoginMessage(error.message);return;}
+  if(data.session)enterAdmin(data.session.user);
+});
+</script>
+</body>
+</html>
